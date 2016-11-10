@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <string.h>
+
+#include <math.h>
 #include <gl/glew.h>
 #include <gl/glut.h>
 #include "math_3d.h"
@@ -9,9 +13,9 @@
 #include "include/ogldev_math_3d.h"
 #include "include/ogldev_util.h"
 
-using namespace std;
-
 static GLuint VBO;
+static GLuint gScaleLocation; // 位置中间变量
+static GLuint gColorLocation;
 
 static const char* pVSFileName = "shader.vs";
 static const char* pFSFileName = "shader.fs";
@@ -20,9 +24,16 @@ static void RenderSceneCB()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glEnableVertexAttribArray(1);
+	// 维护一个不断慢慢增大的静态浮点数
+	static float Scale = 0.0f;
+	Scale += 0.01f;
+	// 将值传递给shader
+	glUniform1f(gScaleLocation, sinf(Scale));
+	glUniform3f(gColorLocation, rand()%100/100.0, rand() % 100 / 100.0, rand() % 100 / 100.0);
+
+	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -30,13 +41,14 @@ static void RenderSceneCB()
 
 	glutSwapBuffers();
 
-	printf("render function be called~~~\n");
+	//printf("render screen\n");
 }
-
 
 static void InitializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderSceneCB);
+	// 将渲染回调注册为全局闲置回调
+	glutIdleFunc(RenderSceneCB);
 }
 
 static void CreateVertexBuffer()
@@ -56,8 +68,8 @@ static void AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum Shad
 	GLuint ShaderObj = glCreateShader(ShaderType);
 
 	if (ShaderObj == 0) {
-		fprintf(stderr, "Error creating shader type %d\n", ShaderType);
-		exit(0);
+		fprintf(stdout, "Error creating shader type %d\n", ShaderType);
+		exit(1);
 	}
 
 	const GLchar* p[1];
@@ -83,7 +95,7 @@ static void CompileShaders()
 	GLuint ShaderProgram = glCreateProgram();
 
 	if (ShaderProgram == 0) {
-		fprintf(stderr, "Error creating shader program\n");
+		fprintf(stdout, "Error creating shader program\n");
 		exit(1);
 	}
 
@@ -107,7 +119,7 @@ static void CompileShaders()
 	glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
 	if (Success == 0) {
 		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-		fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
+		fprintf(stdout, "Error linking shader program: '%s'\n", ErrorLog);
 		exit(1);
 	}
 
@@ -115,39 +127,46 @@ static void CompileShaders()
 	glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
 	if (!Success) {
 		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-		fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
+		fprintf(stdout, "Invalid shader program: '%s'\n", ErrorLog);
 		exit(1);
 	}
 
 	glUseProgram(ShaderProgram);
+
+	// 查询获取一致变量的位置
+	gScaleLocation = glGetUniformLocation(ShaderProgram, "gScale");
+	gColorLocation = glGetUniformLocation(ShaderProgram, "gColor");
+	// 检查错误
+	assert(gScaleLocation != 0xFFFFFFFF);
+	assert(gColorLocation != 0xFFFFFFFF);
 }
 
-//int main(int argc, char** argv)
-//{
-//	glutInit(&argc, argv);
-//	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-//	glutInitWindowSize(1024, 768);
-//	glutInitWindowPosition(100, 100);
-//	glutCreateWindow("Tutorial 04");
-//
-//	InitializeGlutCallbacks();
-//
-//	// Must be done after glut is initialized!
-//	GLenum res = glewInit();
-//	if (res != GLEW_OK) {
-//		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
-//		return 1;
-//	}
-//
-//	printf("GL version: %s\n", glGetString(GL_VERSION));
-//
-//	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-//
-//	CreateVertexBuffer();
-//
-//	CompileShaders();
-//
-//	glutMainLoop();
-//
-//	return 0;
-//}
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowSize(1024, 768);
+	glutInitWindowPosition(100, 100);
+	glutCreateWindow("Tutorial 05");
+
+	InitializeGlutCallbacks();
+
+	// Must be done after glut is initialized!
+	GLenum res = glewInit();
+	if (res != GLEW_OK) {
+		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+		return 1;
+	}
+
+	printf("GL version: %s\n", glGetString(GL_VERSION));
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	CreateVertexBuffer();
+
+	CompileShaders();
+
+	glutMainLoop();
+
+	return 0;
+}

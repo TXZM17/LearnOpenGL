@@ -30,6 +30,9 @@
     <ClCompile Include="Common\ogldev_util.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="testuniform.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math_3d.h">
