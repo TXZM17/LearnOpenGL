@@ -16,6 +16,9 @@
 static GLuint VBO;
 static GLuint gScaleLocation; // 位置中间变量
 static GLuint gColorLocation;
+static GLuint gTransMat;
+
+static float transMat[4][4] = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 
 static const char* pVSFileName = "shader.vs";
 static const char* pFSFileName = "shader.fs";
@@ -28,8 +31,10 @@ static void RenderSceneCB()
 	static float Scale = 0.0f;
 	Scale += 0.01f;
 	// 将值传递给shader
-	glUniform1f(gScaleLocation, sinf(Scale));
-	glUniform3f(gColorLocation, rand()%100/100.0, rand() % 100 / 100.0, rand() % 100 / 100.0);
+	//glUniform1f(gScaleLocation, sinf(Scale));
+	transMat[0][3] = sinf(Scale);
+	glUniform3f(gColorLocation, rand() % 100 / 100.0, rand() % 100 / 100.0, rand() % 100 / 100.0);
+	glUniformMatrix4fv(gTransMat, 1, GL_TRUE, &transMat[0][0]);
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -134,39 +139,41 @@ static void CompileShaders()
 	glUseProgram(ShaderProgram);
 
 	// 查询获取一致变量的位置
-	gScaleLocation = glGetUniformLocation(ShaderProgram, "gScale");
+	//gScaleLocation = glGetUniformLocation(ShaderProgram, "gScale");
 	gColorLocation = glGetUniformLocation(ShaderProgram, "gColor");
+	gTransMat = glGetUniformLocation(ShaderProgram, "gTransMat");
 	// 检查错误
-	assert(gScaleLocation != 0xFFFFFFFF);
+	//assert(gScaleLocation != 0xFFFFFFFF);
 	assert(gColorLocation != 0xFFFFFFFF);
+	assert(gTransMat != 0xffffffff);
 }
 
-//int main(int argc, char** argv)
-//{
-//	glutInit(&argc, argv);
-//	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-//	glutInitWindowSize(1024, 768);
-//	glutInitWindowPosition(100, 100);
-//	glutCreateWindow("Tutorial 05");
-//
-//	InitializeGlutCallbacks();
-//
-//	// Must be done after glut is initialized!
-//	GLenum res = glewInit();
-//	if (res != GLEW_OK) {
-//		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
-//		return 1;
-//	}
-//
-//	printf("GL version: %s\n", glGetString(GL_VERSION));
-//
-//	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-//
-//	CreateVertexBuffer();
-//
-//	CompileShaders();
-//
-//	glutMainLoop();
-//
-//	return 0;
-//}
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowSize(1024, 768);
+	glutInitWindowPosition(100, 100);
+	glutCreateWindow("Tutorial 05");
+
+	InitializeGlutCallbacks();
+
+	// Must be done after glut is initialized!
+	GLenum res = glewInit();
+	if (res != GLEW_OK) {
+		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+		return 1;
+	}
+
+	printf("GL version: %s\n", glGetString(GL_VERSION));
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	CreateVertexBuffer();
+
+	CompileShaders();
+
+	glutMainLoop();
+
+	return 0;
+}

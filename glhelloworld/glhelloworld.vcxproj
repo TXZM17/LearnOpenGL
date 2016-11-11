@@ -153,6 +153,7 @@
     <ClCompile Include="testdot.cpp" />
     <ClCompile Include="testline.cpp" />
     <ClCompile Include="testshader.cpp" />
+    <ClCompile Include="testTranslation.cpp" />
     <ClCompile Include="testuniform.cpp" />
   </ItemGroup>
   <ItemGroup>
