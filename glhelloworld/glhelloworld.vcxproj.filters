@@ -36,6 +36,9 @@
     <ClCompile Include="testTranslation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="testindex.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math_3d.h">
